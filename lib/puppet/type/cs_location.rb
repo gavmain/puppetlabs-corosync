@@ -44,22 +44,21 @@ Puppet::Type.newtype(:cs_location) do
     defaultto 'INFINITY'
   end
 
-    newproperty(:boolean) do
-      desc "This allows you to define multiple rules in an expression.
-        You may want to move a collection of resources away from a node
-        if the ping resource agent score is below a threshold OR the ping
-        resource isn't even defined."
+  newproperty(:boolean_op) do
+    desc "This allows you to define multiple rules in an expression.
+      You may want to move a collection of resources away from a node
+      if the ping resource agent score is below a threshold OR the ping
+      resource isn't even defined."
+  end
 
-    end
+  newproperty(:rule, :array_matching => :all) do
+    desc "An array of hashes for the rule expression. The expression is used
+      to determine a suitablity of a node to run a collection of resources. This 
+      is used in conjunction with the boolean_op property if you define more than one
+      object in the expression."
 
-    newproperty(:rule, :array_matching => :all) do
-      desc "An array of hashes for the rule expression. The expression is used
-        to determine a suitablity of a node to run a collection of resources. This 
-        is used in conjunction with the boolean property if you define more than one
-        object in the expression."
-
-      defaultto Array.new
-    end
+    defaultto Array.new
+  end
 
   autorequire(:cs_shadow) do
     [ @parameters[:cib] ]
@@ -69,13 +68,12 @@ Puppet::Type.newtype(:cs_location) do
     [ 'corosync' ]
   end
 
-    validate do
-      if [
-        self[:node_name],
-        self[:rule],
-      ].compact.length > 1
-        fail('Location constraints dictate that node_name and rule cannot co-exist for this type.') unless self[:rule].empty?
-      end
-
+  validate do
+    if [
+      self[:node_name],
+      self[:rule],
+    ].compact.length > 1
+      fail('Location constraints dictate that node_name and rule cannot co-exist for this type.') unless self[:rule].empty?
     end
+  end
 end

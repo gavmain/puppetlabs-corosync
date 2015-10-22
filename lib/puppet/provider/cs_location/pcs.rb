@@ -9,6 +9,8 @@ Puppet::Type.type(:cs_location).provide(:pcs, :parent => Puppet::Provider::Pacem
 
   defaultfor :operatingsystem => [:fedora, :centos, :redhat]
 
+  mk_resource_methods
+
   commands :pcs      => 'pcs'
   commands :cibadmin => 'cibadmin'
 
@@ -28,7 +30,7 @@ Puppet::Type.type(:cs_location).provide(:pcs, :parent => Puppet::Provider::Pacem
     end
 
     if ! e.elements['rule'].nil?
-      hash[:boolean] = e.elements['rule'].attributes['boolean-op']
+      hash[:boolean_op] = e.elements['rule'].attributes['boolean-op']
       hash[:score] = e.elements['rule'].attributes['score']
 
       e.elements['rule'].each_element do |o|
@@ -74,7 +76,7 @@ Puppet::Type.type(:cs_location).provide(:pcs, :parent => Puppet::Provider::Pacem
       :cib        => @resource[:cib]
     }
     @property_hash[:node_name] = @resource[:node_name] if ! @resource[:node_name].nil?
-    @property_hash[:boolean] = @resource[:boolean] if ! @resource[:boolean].nil?
+    @property_hash[:boolean_op] = @resource[:boolean_op] if ! @resource[:boolean_op].nil?
     @property_hash[:rule] = @resource[:rule] if ! @resource[:rule].nil?
   end
 
@@ -84,52 +86,6 @@ Puppet::Type.type(:cs_location).provide(:pcs, :parent => Puppet::Provider::Pacem
     cmd = [ command(:pcs), 'constraint', 'remove', @resource[:name] ]
     Puppet::Provider::Pacemaker::run_pcs_command(cmd)
     @property_hash.clear
-  end
-
-  # Getters that obtains the parameters defined in our location that have been
-  # populated by prefetch or instances (depends on if your using puppet resource
-  # or not).
-  def primitive
-    @property_hash[:primitive]
-  end
-
-  def node_name
-    @property_hash[:node_name]
-  end
-
-  def score
-    @property_hash[:score]
-  end
-
-  def boolean
-    @property_hash[:boolean]
-  end
-
-  def rule
-    @property_hash[:rule]
-  end
-
-  # Our setters for parameters.  Setters are used when the resource already
-  # exists so we just update the current value in the location_hash and doing
-  # this marks it to be flushed.
-  def primitive=(should)
-    @property_hash[:primitive] = should
-  end
-
-  def node_name=(should)
-    @property_hash[:node_name] = should
-  end
-
-  def score=(should)
-    @property_hash[:score] = should
-  end
-
-  def boolean=(should)
-    @property_hash[:boolean] = should
-  end
-
-  def rule=(should)
-    @property_hash[:rule] = should
   end
 
   # Flush is triggered on anything that has been detected as being
@@ -160,17 +116,17 @@ Puppet::Type.type(:cs_location).provide(:pcs, :parent => Puppet::Provider::Pacem
         }
 
         # if there are more than 1 expressions defined in the array
-        # a boolean attribute is required in the rule element.
-        # 'and' is specified if no boolean parameter is present in the 
+        # a boolean_op attribute is required in the rule element.
+        # 'and' is specified if no boolean_op parameter is present in the 
         # property_hash
         if @property_hash[:rule].length > 1
-          if @property_hash[:boolean].nil?
-            boolean = 'and'
+          if @property_hash[:boolean_op].nil?
+            boolean_op = 'and'
           else
-            boolean = @property_hash[:boolean]
+            boolean_op = @property_hash[:boolean_op]
           end
           rsc_location.add_element 'rule', {
-            'boolean-op' => boolean,
+            'boolean-op' => boolean_op,
             'id'         => "#{@property_hash[:name]}-rule",
             'score'      => "#{@property_hash[:score]}",
           }
